@@ -10,12 +10,27 @@ const server = express();
 
 const port = process.env.PORT || 5001;
 
-const whitelist = [process.env.BE_DEV_URL, process.env.BE_PROD_URL];
+const whitelist = [process.env.FE_DEV_URL, process.env.FE_PROD_URL];
 const corsOptions = {
-  origin: "http://frontendapp.com",
+  origin: (origin, next) => {
+    console.log("CURRENT ORIGIN: ", origin);
+
+    if (!origin || whitelist.indexOf(origin) !== -1) {
+      // origin is in the whitelist --> move next with no errors
+      next(null, true);
+    } else {
+      // origin is NOT in the whitelist --> trigger an error
+      next(
+        createError(
+          400,
+          `Cors Error! your origin ${origin} is not in the list!`
+        )
+      );
+    }
+  },
 };
 
-server.use(cors());
+server.use(cors(corseOptions));
 
 server.use(express.static(publicFolderPath));
 server.use(express.json());
