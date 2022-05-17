@@ -1,214 +1,216 @@
-import express from 'express'
+import express from "express";
 import {
   getProducts,
   writeProducts,
   getReviews,
-  writeReviews
-} from '../../lib/fs-tools.js'
+  writeReviews,
+} from "../../lib/fs-tools.js";
 import {
   checkProductsSchema,
   productsValidationResult,
   reviewsValidationResult,
-  checkReviewsSchema
-} from './validation.js'
-import uniqid from 'uniqid'
-import createError from 'http-errors'
-import multer from 'multer'
-import { saveProductsPicture } from '../../lib/fs-tools.js'
+  checkReviewsSchema,
+} from "./validation.js";
+import uniqid from "uniqid";
+import createError from "http-errors";
+import multer from "multer";
+import { saveProductsPicture } from "../../lib/fs-tools.js";
+import { v2 as cloudinary } from "cloudinary";
+import { CloudinaryStorage } from "multer-storage-cloudinary";
 
-const productsRouter = express.Router()
+const productsRouter = express.Router();
 
 productsRouter.post(
-  '/',
+  "/",
   checkProductsSchema,
   productsValidationResult,
   async (req, res, next) => {
     try {
-      console.log('req body: ', req.body)
+      console.log("req body: ", req.body);
       const newProduct = {
         ...req.body,
         createdAt: new Date(),
-        id: uniqid()
-      }
-      console.log('new product: ', newProduct)
-      const products = await getProducts()
-      products.push(newProduct)
-      await writeProducts(products)
-      res.status(201).send({ id: newProduct.id })
+        id: uniqid(),
+      };
+      console.log("new product: ", newProduct);
+      const products = await getProducts();
+      products.push(newProduct);
+      await writeProducts(products);
+      res.status(201).send({ id: newProduct.id });
     } catch (error) {
-      next(error)
+      next(error);
     }
   }
-)
+);
 
-productsRouter.get('/', async (req, res, next) => {
+productsRouter.get("/", async (req, res, next) => {
   try {
-    const products = await getProducts()
-    console.log('products: ', products)
-    res.send(products)
+    const products = await getProducts();
+    console.log("products: ", products);
+    res.send(products);
   } catch (error) {
-    next(error)
+    next(error);
   }
-})
+});
 
-productsRouter.get('/:productId', async (req, res, next) => {
+productsRouter.get("/:productId", async (req, res, next) => {
   try {
-    const products = await getProducts()
+    const products = await getProducts();
     const foundProduct = products.find(
       (product) => product.id === req.params.productId
-    )
-    res.send(foundProduct)
+    );
+    res.send(foundProduct);
   } catch (error) {
-    next(error)
+    next(error);
   }
-})
+});
 
 productsRouter.put(
-  '/:productId',
+  "/:productId",
   checkProductsSchema,
   productsValidationResult,
   async (req, res, next) => {
     try {
-      const products = await getProducts()
+      const products = await getProducts();
       const index = products.findIndex(
         (product) => product.id === req.params.productId
-      )
+      );
       if (index !== -1) {
-        const oldProduct = products[index]
+        const oldProduct = products[index];
         const updatedProduct = {
           ...oldProduct,
           ...req.body,
-          updatedAt: new Date()
-        }
-        products[index] = updatedProduct
-        await writeProducts(products)
-        res.send(updatedProduct)
+          updatedAt: new Date(),
+        };
+        products[index] = updatedProduct;
+        await writeProducts(products);
+        res.send(updatedProduct);
       }
     } catch (error) {
-      next(error)
+      next(error);
     }
   }
-)
+);
 
-productsRouter.delete('/:productId', async (req, res, next) => {
+productsRouter.delete("/:productId", async (req, res, next) => {
   try {
-    const products = await getProducts()
+    const products = await getProducts();
     const keptProducts = products.filter(
       (product) => product.id !== req.params.productId
-    )
-    await writeProducts(keptProducts)
-    res.status(204).send()
+    );
+    await writeProducts(keptProducts);
+    res.status(204).send();
   } catch (error) {
-    next(error)
+    next(error);
   }
-})
+});
 
 // -----------REVIEW PRODUCTS CRUD ---------
 
 productsRouter.post(
-  '/:productId/reviews',
+  "/:productId/reviews",
   /*   checkReviewsSchema,
   reviewsValidationResult, */
   async (req, res, next) => {
     try {
-      const products = await getProducts()
+      const products = await getProducts();
       const newReview = {
         ...req.body,
         updatedAt: new Date(),
-        reviewId: uniqid()
-      }
+        reviewId: uniqid(),
+      };
 
       const findProduct = products.find(
         (product) => product.id === req.params.productId
-      )
+      );
       if (findProduct) {
-        findProduct.reviews.push(newReview)
-        await writeProducts(products)
-        res.send(newReview)
+        findProduct.reviews.push(newReview);
+        await writeProducts(products);
+        res.send(newReview);
       }
     } catch (error) {
-      next(error)
+      next(error);
     }
   }
-)
+);
 
-productsRouter.get('/:productId/reviews', async (req, res, next) => {
+productsRouter.get("/:productId/reviews", async (req, res, next) => {
   try {
-    const products = await getProducts()
+    const products = await getProducts();
     const findProduct = products.find(
       (product) => product.id === req.params.productId
-    )
-    res.send(findProduct.reviews)
+    );
+    res.send(findProduct.reviews);
   } catch (error) {
-    next(error)
+    next(error);
   }
-})
+});
 
-productsRouter.get('/:productId/reviews/:reviewId', async (req, res, next) => {
+productsRouter.get("/:productId/reviews/:reviewId", async (req, res, next) => {
   try {
-    const products = await getProducts()
+    const products = await getProducts();
     const findProduct = products.find(
       (product) => product.id === req.params.productId
-    )
+    );
     const findReview = findProduct.reviews.find(
       (review) => review.reviewId === req.params.reviewId
-    )
-    console.log('This is the Review:', findReview)
-    console.log('This is the Product: ', findProduct)
+    );
+    console.log("This is the Review:", findReview);
+    console.log("This is the Product: ", findProduct);
 
     if (findProduct && findReview) {
-      res.send(findReview)
+      res.send(findReview);
     }
   } catch (error) {
-    next(error)
+    next(error);
   }
-})
+});
 
-productsRouter.put('/:productId/reviews/:reviewId', async (req, res, next) => {
+productsRouter.put("/:productId/reviews/:reviewId", async (req, res, next) => {
   try {
-    const products = await getProducts()
+    const products = await getProducts();
     const index = products.findIndex(
       (product) => product.id === req.params.productId
-    )
-    console.log('INDEX OF  :', index)
+    );
+    console.log("INDEX OF  :", index);
 
     const foundReview = products[index].reviews.find(
       (review) => review.reviewId === req.params.reviewId
-    )
+    );
 
     if (foundReview) {
-      const oldReview = products[index]
+      const oldReview = products[index];
 
       const updatedReview = {
         ...oldReview,
         ...req.body,
-        updatedAt: new Date()
-      }
-      console.log('INDEX OF old :', updatedReview)
+        updatedAt: new Date(),
+      };
+      console.log("INDEX OF old :", updatedReview);
 
-      products[index].reviews = updatedReview
-      await writeProducts(products)
-      res.send(updatedReview)
+      products[index].reviews = updatedReview;
+      await writeProducts(products);
+      res.send(updatedReview);
     } else {
-      next(createError(404, 'no review ID found'))
+      next(createError(404, "no review ID found"));
     }
-    console.log('INDEX OF find:', foundReview)
+    console.log("INDEX OF find:", foundReview);
   } catch (error) {
-    next(error)
+    next(error);
   }
-})
+});
 
 productsRouter.delete(
-  '/:productId/reviews/:reviewId',
+  "/:productId/reviews/:reviewId",
   async (req, res, next) => {
     try {
-      const products = await getProducts()
+      const products = await getProducts();
 
       const keptProducts = products.filter((product) =>
-        console.log('product reviews: ', product.reviews)
-      )
+        console.log("product reviews: ", product.reviews)
+      );
 
-      console.log('kept products: ', keptProducts)
+      console.log("kept products: ", keptProducts);
 
       //   const findReview = foundProduct.reviews.find(
       //     (review) => review.reviewId === req.params.reviewId
@@ -221,44 +223,82 @@ productsRouter.delete(
       //   console.log("HERE IS THE REVIEW", remainingReview);
 
       //   await writeProducts(keptProducts)
-      res.status(204).send()
+      res.status(204).send();
     } catch (error) {
-      next(error)
+      next(error);
     }
   }
-)
+);
 
-productsRouter.post(
-  '/:productId/upload',
-  multer().single('picture'),
+/* productsRouter.post(
+  "/:productId/upload",
+  multer().single("picture"),
   async (request, response, next) => {
     try {
-      console.log('FILE:', request.file)
+      console.log("FILE:", request.file);
       const url = await saveProductsPicture(
         request.file.originalname,
         request.file.buffer
-      )
+      );
 
-      const products = await getProducts()
+      const products = await getProducts();
 
       const index = products.findIndex(
         (post) => post.id === request.params.userId
-      )
+      );
       if (index !== -1) {
-        const oldPost = products[index]
+        const oldPost = products[index];
         const updatedProducts = {
           ...oldPost,
           imageUrl: url,
-          updatedAt: new Date()
-        }
-        products[index] = updatedProducts
-        await writeProducts(products)
-        response.send(updatedProducts)
+          updatedAt: new Date(),
+        };
+        products[index] = updatedProducts;
+        await writeProducts(products);
+        response.send(updatedProducts);
       }
     } catch (error) {
-      next(error)
+      next(error);
     }
   }
-)
+); */
 
-export default productsRouter
+const cloudinaryUploader = multer({
+  storage: new CloudinaryStorage({
+    cloudinary, // this searches in your process.env for something called CLOUDINARY_URL, which contains your API environment variable
+    params: {
+      folder: "m5d7",
+    },
+  }),
+  /*   fileFilter: (req, file, multerNext) => {
+    if (file.mimetype !== "image/gif") {
+      multerNext(createError(400, "Only GIF allowed!"));
+    } else {
+      multerNext(null, true);
+    }
+  },
+  limits: { fileSize: 1 * 1024 * 1024 }, */
+}).single("picture");
+
+productsRouter.post(
+  "/:productId/upload",
+  cloudinaryUploader,
+  async (req, res, next) => {
+    // "avatar" needs to match exactly to the field name appended to the FormData object in the FE, otherwise Multer is not going to be able to find the file into the request body
+    try {
+      console.log("FILE: ", req.file);
+
+      // find user by userId in users.json
+
+      // update avatar field of that user adding "https://res.cloudinary.com/riccardostrive/image/upload/v1652783597/feb22/books/sxmhy9wwa0xukoumv8ur.gif"
+      // in FE "https://res.cloudinary.com/riccardostrive/image/upload/v1652783597/feb22/books/sxmhy9wwa0xukoumv8ur.gif"
+      res.send();
+    } catch (error) {
+      console.log(error);
+      res.status(500).send({ error: error.message });
+      /* next(error); */
+    }
+  }
+);
+
+export default productsRouter;
