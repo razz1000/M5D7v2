@@ -11,6 +11,7 @@ const server = express();
 const port = process.env.PORT || 5001;
 
 const whitelist = [process.env.FE_DEV_URL, process.env.FE_PROD_URL];
+
 const corsOptions = {
   origin: (origin, next) => {
     console.log("CURRENT ORIGIN: ", origin);
@@ -30,7 +31,7 @@ const corsOptions = {
   },
 };
 
-server.use(cors(corseOptions));
+server.use(cors(corsOptions));
 
 server.use(express.static(publicFolderPath));
 server.use(express.json());
