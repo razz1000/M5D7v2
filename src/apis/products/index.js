@@ -4,6 +4,7 @@ import {
   writeProducts,
   getReviews,
   writeReviews,
+  getProductsReadableStream,
 } from "../../lib/fs-tools.js";
 import {
   checkProductsSchema,
@@ -18,7 +19,12 @@ import { saveProductsPicture } from "../../lib/fs-tools.js";
 import { v2 as cloudinary } from "cloudinary";
 import { CloudinaryStorage } from "multer-storage-cloudinary";
 
+import { getPDFReadableStream } from "../../lib/pdf-tools.js";
+import { pipeline } from "stream";
+import { createGzip } from "zlib";
+
 const productsRouter = express.Router();
+const pdfRouter = express.Router();
 
 productsRouter.post(
   "/",

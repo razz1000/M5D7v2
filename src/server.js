@@ -3,6 +3,7 @@ import listEndpoints from "express-list-endpoints";
 import productsRouter from "./apis/products/index.js";
 import cors from "cors";
 import { join } from "path";
+import pdfRouter from "./apis/pdf/index.js";
 
 const publicFolderPath = join(process.cwd(), "./public");
 
@@ -37,6 +38,7 @@ server.use(express.static(publicFolderPath));
 server.use(express.json());
 
 server.use("/products", productsRouter);
+server.use("/products/new", pdfRouter);
 
 server.use(express.static(publicFolderPath));
 
