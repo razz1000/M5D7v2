@@ -1,15 +1,6 @@
 import PdfPrinter from "pdfmake";
 import imageToBase64 from "image-to-base64";
 
-let fetchData = async () => {
-  const response = await fetch(
-    imageToBase64(
-      "https://res.cloudinary.com/dfb584zgd/image/upload/v1652860517/m5d7/eyi1ertnfs4r637tyul4.jpg"
-    )
-  );
-  console.log(response);
-};
-
 export const getPDFReadableStream = (products) => {
   const fonts = {
     Roboto: {
@@ -43,6 +34,10 @@ export const getPDFReadableStream = (products) => {
         text: "And here is a image " + products.imageUrl,
         style: ["quote", "small"],
       },
+      /*  {
+        image: "data:image/jpeg;base64,...encodedContent...",
+        fit: [100, 100],
+      }, */
     ],
     styles: {
       header: {
