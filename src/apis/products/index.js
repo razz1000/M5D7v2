@@ -315,32 +315,24 @@ productsRouter.post(
   }
 );
 
-productsRouter.get(":productId/pdf", async (req, res, next) => {
+productsRouter.get("/:productId/pdf", async (req, res, next) => {
   try {
-    res.setHeader("Content-Disposition", "attachment; filename=example.pdf");
-
+    /* res.setHeader("Content-Disposition", "attachment; filename=example.pdf"); */
+    res.setHeader("Content-Type", "application/pdf");
     const products = await getProducts();
 
     console.log("products: ", products);
-    const source = getPDFReadableStream(products[0]);
+    const source = await getPDFReadableStream(products[1]);
     const destination = res;
 
     pipeline(source, destination, (err) => {
       if (err) console.log(err);
     });
+    /*     pdfStream.end(); */
   } catch (error) {
     console.log(error);
-    next(error);
+    res.send(500).send({ message: error.message });
   }
 });
-
-let fetchPictureData = async () => {
-  const response = await fetch(
-    imageToBase64(
-      "https://res.cloudinary.com/dfb584zgd/image/upload/v1652860517/m5d7/eyi1ertnfs4r637tyul4.jpg"
-    )
-  );
-  console.log(response);
-};
 
 export default productsRouter;

@@ -20,6 +20,7 @@
   },
   "homepage": "https://github.com/lbourke1234/M5-friday-build#readme",
   "dependencies": {
+    "axios": "^0.27.2",
     "cloudinary": "^1.30.0",
     "cors": "^2.8.5",
     "express": "^4.18.1",
@@ -31,6 +32,7 @@
     "multer": "^1.4.4",
     "multer-storage-cloudinary": "^4.0.0",
     "pdfmake": "^0.2.5",
+    "striptags": "^3.2.0",
     "uniqid": "^5.4.0"
   },
   "devDependencies": {
