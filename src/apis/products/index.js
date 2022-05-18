@@ -284,14 +284,22 @@ productsRouter.post(
   "/:productId/upload",
   cloudinaryUploader,
   async (req, res, next) => {
-    // "avatar" needs to match exactly to the field name appended to the FormData object in the FE, otherwise Multer is not going to be able to find the file into the request body
     try {
       console.log("FILE: ", req.file);
+      const products = await getProducts();
+      const index = products.findIndex(
+        (product) => product.id === req.params.productId
+      );
+      console.log("INDEX OF  :", index);
+      const oldProduct = products[index];
+      const newProduct = {
+        ...oldProduct,
+        imageUrl: req.file.path,
+      };
+      console.log(req.file);
+      products[index] = newProduct;
+      writeProducts(products);
 
-      // find user by userId in users.json
-
-      // update avatar field of that user adding "https://res.cloudinary.com/riccardostrive/image/upload/v1652783597/feb22/books/sxmhy9wwa0xukoumv8ur.gif"
-      // in FE "https://res.cloudinary.com/riccardostrive/image/upload/v1652783597/feb22/books/sxmhy9wwa0xukoumv8ur.gif"
       res.send();
     } catch (error) {
       console.log(error);
