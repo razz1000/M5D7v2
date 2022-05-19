@@ -20,6 +20,7 @@
   },
   "homepage": "https://github.com/lbourke1234/M5-friday-build#readme",
   "dependencies": {
+    "@sendgrid/mail": "^7.7.0",
     "axios": "^0.27.2",
     "cloudinary": "^1.30.0",
     "cors": "^2.8.5",

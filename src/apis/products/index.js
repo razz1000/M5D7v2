@@ -23,6 +23,7 @@ import { getPDFReadableStream } from "../../lib/pdf-tools.js";
 import { pipeline } from "stream";
 import { createGzip } from "zlib";
 import json2csv from "json2csv";
+import { sendNewProductEmail } from "../../lib/email-tools.js";
 
 const productsRouter = express.Router();
 const pdfRouter = express.Router();
@@ -34,16 +35,21 @@ productsRouter.post(
   async (req, res, next) => {
     try {
       console.log("req body: ", req.body);
+      const { email } = req.body;
       const newProduct = {
         ...req.body,
         createdAt: new Date(),
         id: uniqid(),
       };
       console.log("new product: ", newProduct);
+      await sendNewProductEmail(email);
       const products = await getProducts();
       products.push(newProduct);
       await writeProducts(products);
       res.status(201).send({ id: newProduct.id });
+      res.send({
+        message: "new product registered, email sent to the creator!",
+      });
     } catch (error) {
       next(error);
     }
@@ -327,6 +333,16 @@ productsRouter.get("/:productId/productscsv", async (req, res, next) => {
   } catch (error) {
     next(error);
     res.send(500).send({ message: error.message });
+  }
+});
+
+productsRouter.post("/:productId/newproduct", async (req, res, next) => {
+  try {
+    const { email } = req.body;
+    await sendNewProductEmail(email);
+    res.send({ message: "new product registered, email sent to the creator!" });
+  } catch (error) {
+    next(error);
   }
 });
 
