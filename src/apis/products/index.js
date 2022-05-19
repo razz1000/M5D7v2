@@ -320,15 +320,18 @@ productsRouter.get("/:productId/pdf", async (req, res, next) => {
     /* res.setHeader("Content-Disposition", "attachment; filename=example.pdf"); */
     res.setHeader("Content-Type", "application/pdf");
     const products = await getProducts();
-
     console.log("products: ", products);
-    const source = await getPDFReadableStream(products[1]);
+    const index = products.findIndex(
+      (product) => product.id === req.params.productId
+    );
+    console.log("INDEX OF  :", index);
+    const oldProduct = products[index];
+    const source = await getPDFReadableStream(oldProduct);
     const destination = res;
 
     pipeline(source, destination, (err) => {
       if (err) console.log(err);
     });
-    /*     pdfStream.end(); */
   } catch (error) {
     console.log(error);
     res.send(500).send({ message: error.message });

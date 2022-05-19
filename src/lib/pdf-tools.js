@@ -20,8 +20,8 @@ export const getPDFReadableStream = async (products) => {
   if (products.imageUrl) {
     const response = await axios.get(products.imageUrl, {
       responseType: "arraybuffer",
-
-      /*  const response = await fetch(products.imageUrl, {
+      /* 
+    const response = await fetch(products.imageUrl, {
       responseType: "arraybuffer", */
     });
 
@@ -45,4 +45,4 @@ export const getPDFReadableStream = async (products) => {
   pdfReadableStream.end();
 
   return pdfReadableStream;
-}; // returns a readable stream
+};
