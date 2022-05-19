@@ -22,6 +22,7 @@ import { CloudinaryStorage } from "multer-storage-cloudinary";
 import { getPDFReadableStream } from "../../lib/pdf-tools.js";
 import { pipeline } from "stream";
 import { createGzip } from "zlib";
+import json2csv from "json2csv";
 
 const productsRouter = express.Router();
 const pdfRouter = express.Router();
@@ -236,39 +237,6 @@ productsRouter.delete(
   }
 );
 
-/* productsRouter.post(
-  "/:productId/upload",
-  multer().single("picture"),
-  async (request, response, next) => {
-    try {
-      console.log("FILE:", request.file);
-      const url = await saveProductsPicture(
-        request.file.originalname,
-        request.file.buffer
-      );
-
-      const products = await getProducts();
-
-      const index = products.findIndex(
-        (post) => post.id === request.params.userId
-      );
-      if (index !== -1) {
-        const oldPost = products[index];
-        const updatedProducts = {
-          ...oldPost,
-          imageUrl: url,
-          updatedAt: new Date(),
-        };
-        products[index] = updatedProducts;
-        await writeProducts(products);
-        response.send(updatedProducts);
-      }
-    } catch (error) {
-      next(error);
-    }
-  }
-); */
-
 const cloudinaryUploader = multer({
   storage: new CloudinaryStorage({
     cloudinary, // this searches in your process.env for something called CLOUDINARY_URL, which contains your API environment variable
@@ -334,6 +302,30 @@ productsRouter.get("/:productId/pdf", async (req, res, next) => {
     });
   } catch (error) {
     console.log(error);
+    res.send(500).send({ message: error.message });
+  }
+});
+
+productsRouter.get("/:productId/productscsv", async (req, res, next) => {
+  try {
+    res.setHeader("Content-Disposition", "attachment; filename=products.csv");
+
+    const products = await getProducts();
+    console.log("products: ", products);
+    const index = products.findIndex(
+      (product) => product.id === req.params.productId
+    );
+    console.log("INDEX OF  :", index);
+    const actualProduct = products[index];
+    const source = await getProductsReadableStream(actualProduct);
+
+    const destination = res;
+    const transform = new json2csv.Transform();
+    pipeline(source, transform, destination, (err) => {
+      if (err) console.log(err);
+    });
+  } catch (error) {
+    next(error);
     res.send(500).send({ message: error.message });
   }
 });

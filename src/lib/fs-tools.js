@@ -33,5 +33,5 @@ export const saveProductsPicture = (fileName, contentAsBuffer) => {
 };
 
 export const getProductsReadableStream = () => {
-  createReadStream(productJSONPath);
+  return createReadStream(productJSONPath);
 };
