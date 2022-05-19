@@ -5,7 +5,7 @@ import cors from "cors";
 import { join } from "path";
 import pdfRouter from "./apis/pdf/index.js";
 
-const publicFolderPath = join(process.cwd(), "./public");
+export const publicFolderPath = join(process.cwd(), "./public");
 
 const server = express();
 

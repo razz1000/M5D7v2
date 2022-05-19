@@ -24,10 +24,14 @@ import { pipeline } from "stream";
 import { createGzip } from "zlib";
 import json2csv from "json2csv";
 import { sendNewProductEmail } from "../../lib/email-tools.js";
+import { promisify } from "util";
+import streamToArray from "stream-to-array";
+import http from "http";
+import { Base64Encode } from "base64-stream";
 
 const productsRouter = express.Router();
 const pdfRouter = express.Router();
-
+/*  WORKING BELOW WITHOUT AN ATTACHEMTN
 productsRouter.post(
   "/",
   checkProductsSchema,
@@ -47,6 +51,7 @@ productsRouter.post(
       products.push(newProduct);
       await writeProducts(products);
       res.status(201).send({ id: newProduct.id });
+
       res.send({
         message: "new product registered, email sent to the creator!",
       });
@@ -54,7 +59,65 @@ productsRouter.post(
       next(error);
     }
   }
+); */
+
+productsRouter.post(
+  "/",
+  checkProductsSchema,
+  productsValidationResult,
+  async (req, res, next) => {
+    try {
+      console.log("req body: ", req.body);
+      const { email } = req.body; // This is for the email being sent
+      const newProduct = {
+        ...req.body,
+        createdAt: new Date(),
+        id: uniqid(),
+      };
+      const products = await getProducts();
+      products.push(newProduct);
+      await writeProducts(products);
+      res.setHeader("Content-Type", "application/pdf");
+
+      const source = await getPDFReadableStream(newProduct);
+      const destination = res;
+      await sendNewProductEmail(email, source);
+      pipeline(source, destination, (err) => {
+        if (err) console.log(err);
+      });
+
+      res.status(201).send({ id: newProduct.id });
+      res.send({
+        message: "new product registered, email sent to the creator!", // This is for the email being sent
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
 );
+
+productsRouter.get("/:productId/pdf", async (req, res, next) => {
+  try {
+    /* res.setHeader("Content-Disposition", "attachment; filename=example.pdf"); */
+    res.setHeader("Content-Type", "application/pdf");
+    const products = await getProducts();
+    console.log("products: ", products);
+    const index = products.findIndex(
+      (product) => product.id === req.params.productId
+    );
+    console.log("INDEX OF  :", index);
+    const oldProduct = products[index];
+    const source = await getPDFReadableStream(oldProduct);
+    const destination = res;
+
+    pipeline(source, destination, (err) => {
+      if (err) console.log(err);
+    });
+  } catch (error) {
+    console.log(error);
+    res.send(500).send({ message: error.message });
+  }
+});
 
 productsRouter.get("/", async (req, res, next) => {
   try {
